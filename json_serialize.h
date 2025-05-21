@@ -21,11 +21,11 @@
 #define JSON_SERIALIZE_ITEM_PTR(x) JSON_SERIALIZE_PTR(EXTRACT_MEMBER(x), EXTRACT_NICK(x))
 #define JSON_DESERIALIZE_ITEM_PTR(x) JSON_DESERIALIZE_PTR(EXTRACT_MEMBER(x), EXTRACT_NICK(x))
 
-#define REFLECTION_CLASS_JSON(T) \
+#define REGIST_CLASS_JSON(T) \
 namespace serialize \
 {\
     template<>\
-	class JsonEntity<T>\
+	class JsonSerializer<T>\
 	{\
 	public:\
 		static std::string ToString(const std::shared_ptr<T> &entity) \
@@ -44,38 +44,30 @@ namespace serialize \
 		{\
             return Json(entity.ToString());\
 		}\
-        template<typename U = std::shared_ptr<T>> \
-        typename std::enable_if<is_shared_ptr<U>::value, U>::type\
-		static FromString(const std::string &str) \
+		static std::shared_ptr<T> FromStringPtr(const std::string &str) \
 		{\
 		    return std::make_shared<T>(str);\
 		}\
-        template<typename U = T> \
-        typename std::enable_if<!is_shared_ptr<U>::value, U>::type\
-		static FromString(const std::string &str) \
+		static T FromString(const std::string &str) \
 		{\
 		    return T(str);\
 		}\
-        template<typename U = std::shared_ptr<T>> \
-        typename std::enable_if<is_shared_ptr<U>::value, U>::type\
-		static FromJson(const Json &json) \
+		static std::shared_ptr<T> FromJsonPtr(const Json &json) \
 		{\
 		    return std::make_shared<T>(json.get<std::string>());\
 		}\
-        template<typename U = T> \
-        typename std::enable_if<!is_shared_ptr<U>::value, U>::type\
-		static FromJson(const Json &json) \
+		static T FromJson(const Json &json) \
 		{\
 		    return T(json.get<std::string>());\
 		}\
 	};\
 }
 
-#define REFLECTION_MEMBER_JSON(T, ...) \
+#define REGIST_MEMBER_JSON(T, ...) \
 namespace serialize \
 {\
 	template<>\
-	class JsonEntity<T>\
+	class JsonSerializer<T>\
 	{\
 	public:\
 		static std::string ToString(const std::shared_ptr<T> &entity) \
@@ -106,9 +98,7 @@ namespace serialize \
             FOREACH(JSON_SERIALIZE_ITEM, __VA_ARGS__);\
             return json;\
 		}\
-        template<typename U = std::shared_ptr<T>> \
-        typename std::enable_if<is_shared_ptr<U>::value, U>::type\
-		static FromString(const std::string &str) \
+		static std::shared_ptr<T> FromStringPtr(const std::string &str) \
 		{\
             auto entity = std::make_shared<T>();\
             Json json;\
@@ -117,9 +107,7 @@ namespace serialize \
             FOREACH(JSON_DESERIALIZE_ITEM_PTR, __VA_ARGS__);\
             return entity;\
 		}\
-        template<typename U = T> \
-        typename std::enable_if<!is_shared_ptr<U>::value, U>::type\
-		static FromString(const std::string &str) \
+		static T FromString(const std::string &str) \
 		{\
             T entity;\
             Json json; \
@@ -128,17 +116,13 @@ namespace serialize \
             FOREACH(JSON_DESERIALIZE_ITEM, __VA_ARGS__);\
             return entity;\
 		}\
-        template<typename U = std::shared_ptr<T>> \
-        typename std::enable_if<is_shared_ptr<U>::value, U>::type\
-		static FromJson(const Json &json) \
+		static std::shared_ptr<T> FromJsonPtr(const Json &json) \
 		{\
             auto entity = std::make_shared<T>();\
             FOREACH(JSON_DESERIALIZE_ITEM_PTR, __VA_ARGS__);\
             return entity;\
 		}\
-        template<typename U = T> \
-        typename std::enable_if<!is_shared_ptr<U>::value, U>::type\
-		static FromJson(const Json &json) \
+		static T FromJson(const Json &json) \
         {\
             T entity;\
             FOREACH(JSON_DESERIALIZE_ITEM, __VA_ARGS__);\
@@ -151,7 +135,7 @@ namespace serialize
 {
 typedef picojson::value Json;
 template<class T>
-class JsonEntity
+class JsonSerializer
 {
 public:
     static std::string ToString(const std::shared_ptr<T> &entity) 
@@ -171,32 +155,24 @@ public:
         return Json();
     }
 
-    template<typename U = std::shared_ptr<T>> 
-    typename std::enable_if<is_shared_ptr<U>::value, U>::type
-    static FromString(const std::string &str) 
+    static std::shared_ptr<T> FromStringPtr(const std::string &str)
     {
         return nullptr;
     }
 
-    template<typename U = T> 
-    typename std::enable_if<!is_shared_ptr<U>::value, U>::type
-    static FromString(const std::string &str) 
+    static T FromString(const std::string &str)
     {
-        return U();
+        return T();
     }
 
-    template<typename U = std::shared_ptr<T>> 
-    typename std::enable_if<is_shared_ptr<U>::value, U>::type
-    static FromJson(const Json &json) 
+    static std::shared_ptr<T> FromJsonPtr(const Json &json) 
     {
         return nullptr;
     }
 
-    template<typename U = T> 
-    typename std::enable_if<!is_shared_ptr<U>::value, U>::type
-    static FromJson(const Json &json) 
+    static T FromJson(const Json &json) 
     {
-        return U();
+        return T();
     }
 };
 
@@ -303,7 +279,7 @@ public:
     {
         if (value != nullptr && !json.is<picojson::null>() && (json.is<picojson::object>() || json.is<std::string>()))
         {
-            json.get<picojson::object>()[name] = JsonEntity<T>::ToJson(value);
+            json.get<picojson::object>()[name] = JsonSerializer<T>::ToJson(value);
         }
     }
 
@@ -314,7 +290,7 @@ public:
     {
         if (!json.is<picojson::null>() && (json.is<picojson::object>() || json.is<std::string>()))
         {
-            json.get<picojson::object>()[name] = JsonEntity<T>::ToJson(value);
+            json.get<picojson::object>()[name] = JsonSerializer<T>::ToJson(value);
         }
     }
 
@@ -482,7 +458,7 @@ public:
             picojson::array array;
             for (const auto &v : value)
             {
-                array.emplace_back(JsonEntity<T>::ToJson(v));
+                array.emplace_back(JsonSerializer<T>::ToJson(v));
             }
             json.get<picojson::object>()[name] = Json(array);
         }
@@ -496,7 +472,7 @@ public:
             picojson::array array;
             for (const auto &v : value)
             {
-                array.emplace_back(JsonEntity<T>::ToJson(v));
+                array.emplace_back(JsonSerializer<T>::ToJson(v));
             }
             json.get<picojson::object>()[name] = Json(array);
         }
@@ -654,7 +630,7 @@ public:
             picojson::array array;
             for (const auto &v : value)
             {
-                array.emplace_back(JsonEntity<T>::ToJson(v));
+                array.emplace_back(JsonSerializer<T>::ToJson(v));
             }
             json.get<picojson::object>()[name] = Json(array);
         }
@@ -668,7 +644,7 @@ public:
             picojson::array array;
             for (const auto &v : value)
             {
-                array.emplace_back(JsonEntity<T>::ToJson(v));
+                array.emplace_back(JsonSerializer<T>::ToJson(v));
             }
             json.get<picojson::object>()[name] = Json(array);
         }
@@ -826,7 +802,7 @@ public:
             picojson::array array;
             for (const auto &v : value)
             {
-                array.emplace_back(JsonEntity<T>::ToJson(v));
+                array.emplace_back(JsonSerializer<T>::ToJson(v));
             }
             json.get<picojson::object>()[name] = Json(array);
         }
@@ -840,7 +816,7 @@ public:
             picojson::array array;
             for (const auto &v : value)
             {
-                array.emplace_back(JsonEntity<T>::ToJson(v));
+                array.emplace_back(JsonSerializer<T>::ToJson(v));
             }
             json.get<picojson::object>()[name] = Json(array);
         }
@@ -961,7 +937,7 @@ public:
         const Json &v = json.get(name);
         if (!v.is<picojson::null>() && (v.is<picojson::object>() || v.is<std::string>()))
         {
-            value = JsonEntity<T>::template FromJson<std::shared_ptr<T>>(v);
+            value = JsonSerializer<T>::FromJsonPtr(v);
         }
     }
 
@@ -972,7 +948,7 @@ public:
         const Json &v = json.get(name);
         if (!v.is<picojson::null>() && (v.is<picojson::object>() || v.is<std::string>()))
         {
-            value = JsonEntity<T>::template FromJson<T>(v);
+            value = JsonSerializer<T>::FromJson(v);
         }
     }
 
@@ -1174,7 +1150,7 @@ public:
             const auto &array = v.get<picojson::array>();
             for (const auto &item : array)
             {
-                value.emplace_back(JsonEntity<T>::template FromJson<std::shared_ptr<T>>(item));
+                value.emplace_back(JsonSerializer<T>::FromJsonPtr(item));
             }
         }
     }
@@ -1188,7 +1164,7 @@ public:
             const auto &array = v.get<picojson::array>();
             for (const auto &item : array)
             {
-                value.emplace_back(JsonEntity<T>::template FromJson<T>(item));
+                value.emplace_back(JsonSerializer<T>::FromJson(item));
             }
         }
     }
@@ -1379,7 +1355,7 @@ public:
             const auto &array = v.get<picojson::array>();
             for (const auto &item : array)
             {
-                value.emplace(JsonEntity<T>::template FromJson<std::shared_ptr<T>>(item));
+                value.emplace(JsonSerializer<T>::FromJsonPtr(item));
             }
         }
     }
@@ -1393,7 +1369,7 @@ public:
             const auto &array = v.get<picojson::array>();
             for (const auto &item : array)
             {
-                value.emplace(JsonEntity<T>::template FromJson<T>(item));
+                value.emplace(JsonSerializer<T>::FromJson(item));
             }
         }
     }
@@ -1584,7 +1560,7 @@ public:
             const auto &array = v.get<picojson::array>();
             for (const auto &item : array)
             {
-                value.emplace(JsonEntity<T>::template FromJson<std::shared_ptr<T>>(item));
+                value.emplace(JsonSerializer<T>::FromJsonPtr(item));
             }
         }
     }
@@ -1598,7 +1574,7 @@ public:
             const auto &array = v.get<picojson::array>();
             for (const auto &item : array)
             {
-                value.emplace(JsonEntity<T>::template FromJson<T>(item));
+                value.emplace(JsonSerializer<T>::FromJson(item));
             }
         }
     }

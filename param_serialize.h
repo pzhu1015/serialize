@@ -17,11 +17,11 @@
 #define PARAM_SERIALIZE_ITEM_PTR(x) PARAM_SERIALIZE_PTR(EXTRACT_MEMBER(x), EXTRACT_NICK(x))
 #define PARAM_DESERIALIZE_ITEM_PTR(x) PARAM_DESERIALIZE_PTR(EXTRACT_MEMBER(x), EXTRACT_NICK(x))
 
-#define REFLECTION_CLASS_PARAM(T) \
+#define REGIST_CLASS_PARAM(T) \
 namespace serialize \
 {\
     template<>\
-	class ParamEntity<T>\
+	class ParamSerializer<T>\
 	{\
 	public:\
 		static std::string ToString(const std::shared_ptr<T> &entity) \
@@ -46,38 +46,30 @@ namespace serialize \
             httplib::detail::parse_query_text(str, param);\
             return param;\
 		}\
-        template<typename U = std::shared_ptr<T>> \
-        typename std::enable_if<is_shared_ptr<U>::value, U>::type\
-		static FromString(const std::string &str) \
+		static std::shared_ptr<T> FromStringPtr(const std::string &str) \
 		{\
 		    return std::make_shared<T>(str);\
 		}\
-        template<typename U = T> \
-        typename std::enable_if<!is_shared_ptr<U>::value, U>::type\
-		static FromString(const std::string &str) \
+		static T FromString(const std::string &str) \
 		{\
 		    return T(str);\
 		}\
-        template<typename U = std::shared_ptr<T>> \
-        typename std::enable_if<is_shared_ptr<U>::value, U>::type\
-		static FromParam(const Params &param) \
+		static std::shared_ptr<T> FromParamPtr(const Params &param) \
 		{\
 		    return std::make_shared<T>(httplib::detail::params_to_query_str(param));\
 		}\
-        template<typename U = T> \
-        typename std::enable_if<!is_shared_ptr<U>::value, U>::type\
-		static FromParam(const Params &param) \
+		static T FromParam(const Params &param) \
 		{\
 		    return T(httplib::detail::params_to_query_str(param));\
 		}\
 	};\
 }
 
-#define REFLECTION_MEMBER_PARAM(T, ...) \
+#define REGIST_MEMBER_PARAM(T, ...) \
 namespace serialize \
 {\
 	template<>\
-	class ParamEntity<T>\
+	class ParamSerializer<T>\
 	{\
 	public:\
 		static std::string ToString(const std::shared_ptr<T> &entity) \
@@ -104,9 +96,7 @@ namespace serialize \
             FOREACH(PARAM_SERIALIZE_ITEM, __VA_ARGS__);\
             return param;\
 		}\
-        template<typename U = std::shared_ptr<T>> \
-        typename std::enable_if<is_shared_ptr<U>::value, U>::type\
-		static FromString(const std::string &str) \
+		static std::shared_ptr<T> FromStringPtr(const std::string &str) \
 		{\
             auto entity = std::make_shared<T>();\
             Params param;\
@@ -114,9 +104,7 @@ namespace serialize \
             FOREACH(PARAM_DESERIALIZE_ITEM_PTR, __VA_ARGS__);\
             return entity;\
 		}\
-        template<typename U = T> \
-        typename std::enable_if<!is_shared_ptr<U>::value, U>::type\
-		static FromString(const std::string &str) \
+		static T FromString(const std::string &str) \
 		{\
             T entity;\
             Params param; \
@@ -124,17 +112,13 @@ namespace serialize \
             FOREACH(PARAM_DESERIALIZE_ITEM, __VA_ARGS__);\
             return entity;\
 		}\
-        template<typename U = std::shared_ptr<T>> \
-        typename std::enable_if<is_shared_ptr<U>::value, U>::type\
-		static FromParam(const Params &param) \
+		static std::shared_ptr<T> FromParamPtr(const Params &param) \
 		{\
             auto entity = std::make_shared<T>();\
             FOREACH(PARAM_DESERIALIZE_ITEM_PTR, __VA_ARGS__);\
             return entity;\
 		}\
-        template<typename U = T> \
-        typename std::enable_if<!is_shared_ptr<U>::value, U>::type\
-		static FromParam(const Params &param) \
+		static T FromParam(const Params &param) \
         {\
             T entity;\
             FOREACH(PARAM_DESERIALIZE_ITEM, __VA_ARGS__);\
@@ -148,7 +132,7 @@ namespace serialize
 typedef httplib::Params Params;
 
 template<class T>
-class ParamEntity
+class ParamSerializer
 {
 public:
     static std::string ToString(const std::shared_ptr<T> &entity) 
