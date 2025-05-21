@@ -11,7 +11,7 @@
 #define PAIR(...) (__VA_ARGS__)
 
 // NICK 宏：创建成员名和序列化名的元组
-#define NICK(name, nick) PAIR(name, #nick)
+#define NAME(name, nick) PAIR(name, nick)
 
 // 普通成员：直接使用成员名作为序列化名
 #define PLAIN(name) PAIR(name, #name)
@@ -23,8 +23,6 @@
 // 提取元组中的第二个元素（序列化名）
 #define EXTRACT_NICK(pair) EXTRACT_SECOND pair
 #define EXTRACT_SECOND(a, b) b
-
-#define NAME(x) #x
 
 #define EXTAND_ARGS(args) args
 

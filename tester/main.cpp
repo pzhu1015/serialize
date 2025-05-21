@@ -24,37 +24,37 @@ public:
 
 REGIST_MEMBER_JSON(
     Test, 
-    NICK(String,string),
-    NICK(Float,float),
-    NICK(Bool,bool),
-    NICK(Double,double),
-    NICK(Int8,int8),
-    NICK(Int16,int16),
-    NICK(Int32,int32),
-    NICK(Int64,int64),
-    NICK(UInt8,uint8),
-    NICK(UInt16,uint16),
-    NICK(UInt32,uint32),
-    NICK(UInt64,uint64),
-    NICK(Array,array),
-    NICK(Set,set),
-    NICK(List,list)
+    NAME(String,"string"),
+    NAME(Float,"float"),
+    NAME(Bool,"bool"),
+    NAME(Double,"double"),
+    NAME(Int8,"int8"),
+    NAME(Int16,"int16"),
+    NAME(Int32,"int32"),
+    NAME(Int64,"int64"),
+    NAME(UInt8,"uint8"),
+    NAME(UInt16,"uint16"),
+    NAME(UInt32,"uint32"),
+    NAME(UInt64,"uint64"),
+    NAME(Array,"array"),
+    NAME(Set,"set"),
+    NAME(List,"list")
 );
 
 REGIST_MEMBER_PARAM(
     Test,
-    NICK(String,string),
-    NICK(Float,float),
-    NICK(Bool,bool),
-    NICK(Double,double),
-    NICK(Int8,int8),
-    NICK(Int16,int16),
-    NICK(Int32,int32),
-    NICK(Int64,int64),
-    NICK(UInt8,uint8),
-    NICK(UInt16,uint16),
-    NICK(UInt32,uint32),
-    NICK(UInt64,uint64)
+    NAME(String,"string"),
+    NAME(Float,"float"),
+    NAME(Bool,"bool"),
+    NAME(Double,"double"),
+    NAME(Int8,"int8"),
+    NAME(Int16,"int16"),
+    NAME(Int32,"int32"),
+    NAME(Int64,"int64"),
+    NAME(UInt8,"uint8"),
+    NAME(UInt16,"uint16"),
+    NAME(UInt32,"uint32"),
+    NAME(UInt64,"uint64")
 );
 
 int main()
