@@ -152,32 +152,24 @@ public:
         return Params();
     }
 
-    template<typename U = std::shared_ptr<T>> 
-    typename std::enable_if<is_shared_ptr<U>::value, U>::type
-    static FromString(const std::string &str) 
+    static std::shared_ptr<T> FromStringPtr(const std::string &str) 
     {
         return nullptr;
     }
 
-    template<typename U = T> 
-    typename std::enable_if<!is_shared_ptr<U>::value, U>::type
-    static FromString(const std::string &str) 
+    static T FromString(const std::string &str) 
     {
-        return U();
+        return T();
     }
 
-    template<typename U = std::shared_ptr<T>> 
-    typename std::enable_if<is_shared_ptr<U>::value, U>::type
-    static FromParam(const Params &param) 
+    static std::shared_ptr<T> FromParamPtr(const Params &param) 
     {
         return nullptr;
     }
 
-    template<typename U = T> 
-    typename std::enable_if<!is_shared_ptr<U>::value, U>::type
-    static FromParam(const Params &param) 
+    static T FromParam(const Params &param) 
     {
-        return U();
+        return T();
     }
 };
 
